@@ -3,7 +3,7 @@ package day03;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.HashMap;
+//import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Collections;
@@ -26,7 +26,7 @@ public class Main {
 		part2(report);
 		scanner.close();
 	}
-	
+	/*	
 	private static void part1(ArrayList<String> report) {
 		String gammaRate = "";
 		String epsilonRate = "";
@@ -49,7 +49,7 @@ public class Main {
 		}
 		System.out.println(Integer.parseInt(gammaRate, 2) * Integer.parseInt(epsilonRate, 2));
 	}
-
+	*/
 	private static void part2(ArrayList<String> report) {
 		Collections.sort(report);
 		System.out.println(ogr(report, 0) * co2sr(report, 0));

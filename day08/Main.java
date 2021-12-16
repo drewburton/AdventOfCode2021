@@ -89,7 +89,7 @@ public class Main {
 		String result = "";
 		for (String s : output) {
 			Set<Character> set = set(s);
-			for (Entry e : signals.entrySet()) {
+			for (Entry<Integer, Set<Character>> e : signals.entrySet()) {
 				if (e.getValue().equals(set)) {
 					result += e.getKey() + "";
 				}
