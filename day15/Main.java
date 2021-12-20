@@ -3,7 +3,6 @@ package day15;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -72,19 +71,7 @@ public class Main {
 		}
 		return risk;
 	}
-
-	private static Node lowestDistanceUnsettled(Set<Node> unsettledNodes) {
-		Node lowestDistanceNode = null;
-		int lowestDistance = Integer.MAX_VALUE;
-		for (Node n : unsettledNodes) {
-			if (n.getDistance() < lowestDistance) {
-				lowestDistance = n.getDistance();
-				lowestDistanceNode = n;
-			}
-		}
-		return lowestDistanceNode;
-	}
-
+	
 	private static void setMinimumDistance(Node n, int weight, Node source) {
 		int sourceDist = source.getDistance();
 		if (sourceDist + weight < n.getDistance()) {
