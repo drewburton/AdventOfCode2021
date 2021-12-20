@@ -23,18 +23,14 @@ public class Main {
 				line += temp;
 			}
 			List<SubPacket> packets = parsePackets(line, 1);
-			System.out.println(getVersionSum(packets));
+			long result = 0;
+			for (SubPacket s : packets) {
+				result += s.value;
+			}
+			System.out.println(result);
 		} catch (FileNotFoundException e) {
 			System.out.println("unable to to open file");
 		}
-	}
-	
-	private static int getVersionSum(List<SubPacket> packets) {
-		int versionSum = 0;
-		for (SubPacket s : packets) {
-			versionSum += s.versionSum();
-		}
-		return versionSum;
 	}
 
 	private static List<SubPacket> parsePackets(String line, int start, int end) {
@@ -103,50 +99,61 @@ public class Main {
 			i += 11;
 			subPackets = parsePackets(line, numSub);
 		}
-		return new OperatorPacket(version, typeID, subPackets);
+		return new OperatorPacket(version, typeID, OperatorPacket.getValue(typeID, subPackets), subPackets);
 	}
 }
 
 abstract class SubPacket {
 	protected int version;
 	protected int typeID;
+	protected long value;
 
-	SubPacket(int version, int typeID) {
+	SubPacket(int version, int typeID, long value) {
 		this.version = version;
 		this.typeID = typeID;
+		this.value = value;
 	}
-
-	public abstract int versionSum();
 }
 
 class OperatorPacket extends SubPacket {
 	private List<SubPacket> containedPackets;
 
-	public OperatorPacket(int version, int typeID, List<SubPacket> containedPackets) {
-		super(version, typeID);
+	public OperatorPacket(int version, int typeID, long value, List<SubPacket> containedPackets) {
+		super(version, typeID, value);
 		this.containedPackets = containedPackets;	
 	}
 
-	@Override
-	public int versionSum() {
-		int versionSum = version;
-		for (SubPacket s : containedPackets) {
-			versionSum += s.versionSum();
+	public static long getValue(int id, List<SubPacket> contained) {
+		switch(id) {
+			case 0:
+				long result = 0;
+				for (SubPacket s : contained) result += s.value;
+				return result;
+			case 1:
+				result = 1;
+				for (SubPacket s : contained) result *= s.value;
+				return result;
+			case 2:
+				result = Long.MAX_VALUE;
+				for (int i = 0; i < contained.size(); i++) result = Long.min(contained.get(i).value, result);
+				return result;
+			case 3:
+				result = Long.MIN_VALUE;
+				for (int i = 0; i < contained.size(); i++) result = Long.max(contained.get(i).value, result);
+				return result;
+			case 5:
+				return contained.get(0).value > contained.get(1).value ? 1 : 0;
+			case 6:
+				return contained.get(0).value < contained.get(1).value ? 1 : 0;
+			case 7:
+				return contained.get(0).value == contained.get(1).value ? 1 : 0;
 		}
-		return versionSum;
+		return 0;
 	}
 }
 
 class LiteralPacket extends SubPacket {
-	private long value;
-
 	public LiteralPacket(int version, int typeID, long value) {
-		super(version, typeID);
-		this.value = value;
-	}
-
-	@Override
-	public int versionSum() {
-		return version;
+		super(version, typeID, value);
 	}
 }
