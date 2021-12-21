@@ -99,7 +99,7 @@ public class Main {
 			i += 11;
 			subPackets = parsePackets(line, numSub);
 		}
-		return new OperatorPacket(version, typeID, OperatorPacket.getValue(typeID, subPackets), subPackets);
+		return new OperatorPacket(version, typeID, OperatorPacket.getValue(typeID, subPackets));
 	}
 }
 
@@ -116,11 +116,8 @@ abstract class SubPacket {
 }
 
 class OperatorPacket extends SubPacket {
-	private List<SubPacket> containedPackets;
-
-	public OperatorPacket(int version, int typeID, long value, List<SubPacket> containedPackets) {
+	public OperatorPacket(int version, int typeID, long value) {
 		super(version, typeID, value);
-		this.containedPackets = containedPackets;	
 	}
 
 	public static long getValue(int id, List<SubPacket> contained) {
