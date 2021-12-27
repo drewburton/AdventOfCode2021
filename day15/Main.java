@@ -3,134 +3,82 @@ package day15;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.PriorityQueue;
 import java.util.Scanner;
-import java.util.Set;
 
 public class Main {
-	private static int[][] grid;
 	public static void main(String[] args) throws Exception {
-		//File file = new File("day15/test.txt");
-		File file = new File("day15/input.txt");	
+		//String fileText = "test";
+		String fileText = "input";
+		File file = new File("day15/" + fileText + ".txt");	
 		try (Scanner scanner = new Scanner(file)) {
-			grid = new int[100][100];
+			int size = "test".equals(fileText) ? 10 : 100;
+			int[][] grid = new int[size][size];
 			int i = 0;
 			while (scanner.hasNextLine()) {
 				int[] row = Arrays.stream(scanner.nextLine().split("|")).mapToInt(s -> Integer.parseInt(s)).toArray();
 				grid[i] = row;
 				i++;
 			}
-			Node start = new Node(0, 0);
-			start.setDistance(0);
-			System.out.println(calculateShortestPath(start));
+
+			int[][] massiveGrid = new int[grid.length * 5][grid.length * 5];
+			for (i = 0; i < massiveGrid.length; i++) {
+				for (int j = 0; j < massiveGrid.length; j++) {
+					massiveGrid[i][j] = grid[i%grid.length][j%grid.length] + (i / grid.length) + (j / grid.length);
+					if (massiveGrid[i][j] > 9) massiveGrid[i][j] = (massiveGrid[i][j] % 10) + 1;
+				}
+			}
+
+			System.out.println(evaluateRisk(massiveGrid));
 		} catch (FileNotFoundException e) {
 			System.out.println("unable to open file");
 		}
 	}
 
-	private static int calculateShortestPath(Node start) throws Exception {
-		Set<Node> settledNodes = new HashSet<>();
-		PriorityQueue<Node> unsettledNodes = new PriorityQueue<>(11, (o1, o2) -> {
-			return o1.getDistance() - o2.getDistance();
-		});
-		Set<String> settledString = new HashSet<>();
-		unsettledNodes.add(start);
+	private static int evaluateRisk(int[][] risk) {
+		int[][] graph = new int[risk.length][risk.length];
+		for (int i = 0; i < graph.length; i++) {
+			for (int j = 0; j < graph.length; j++) {
+				graph[i][j] = 1_000_000;
+			}
+		}
+		graph[graph.length - 1][graph.length - 1] = 0;
 
-		while(unsettledNodes.size() != 0) {
-			Node current = unsettledNodes.remove();
-			unsettledNodes.remove(current);
-			for (var adjacentEntry : current.getAdjacent(grid).entrySet()) {
-				Node adjacent = adjacentEntry.getKey();
-				int weight = adjacentEntry.getValue();
-				if (!settledString.contains(adjacent.getRow() + " " + adjacent.getColumn())) {
-					setMinimumDistance(adjacent, weight, current);
-					unsettledNodes.add(adjacent);
+		boolean changesMade = true;
+		while(changesMade) {
+			changesMade = false;
+			int i = 0, j = 0, min = 0;
+			for (i = graph.length - 1; i >= 0; i--) {
+				for (j = graph.length - 1; j >= 0; j--) {
+					min = Integer.MAX_VALUE;
+					if (i > 0) {
+						min = Integer.min(min, graph[i - 1][j] + risk[i - 1][j]);
+					}
+					if (i < graph.length - 1) {
+						min = Integer.min(min, graph[i + 1][j] + risk[i + 1][j]);
+					}
+					if (j > 0) {
+						min = Integer.min(min, graph[i][j - 1] + risk[i][j - 1]);
+					}
+					if (j < graph.length - 1) {
+						min = Integer.min(min, graph[i][j + 1] + risk[i][j + 1]);
+					}
+					int previousRisk = graph[i][j];
+					graph[i][j] = Integer.min(min, graph[i][j]);
+					if (graph[i][j] != previousRisk) {
+						changesMade = true;
+					}
 				}
 			}
-			settledNodes.add(current);
-			settledString.add(current.getRow() + " " + current.getColumn());
+			
 		}
-		for (Node n : settledNodes) {
-			if (n.getAdjacent(grid).size() == 0) {
-				return printPath(n.getShortestPath());
+		/*
+		for (int i = 0; i < graph.length; i++) {
+			for (int j = 0; j < graph.length; j++) {
+				System.out.print(graph[i][j] + " ");
 			}
+			System.out.println();
 		}
-		return 0;
-	}
-
-	private static int printPath(List<Node> path) {
-		int risk = 0;
-		for (Node n : path) {
-			//System.out.println("(" + n.getRow() + "," + n.getColumn() + ")"); 
-			risk = n.getDistance();
-		}
-		return risk;
-	}
-	
-	private static void setMinimumDistance(Node n, int weight, Node source) {
-		int sourceDist = source.getDistance();
-		if (sourceDist + weight < n.getDistance()) {
-			n.setDistance(sourceDist + weight);
-			LinkedList<Node> shortestPath = new LinkedList<>(source.getShortestPath());
-			shortestPath.add(n);
-			n.setShortestPath(shortestPath);
-		}
-	}
-}
-
-class Node {
-	private int row, column;
-	private List<Node> shortestPath = new LinkedList<>();
-	private int distance = Integer.MAX_VALUE;
-	private Map<Node, Integer> adjacentNodes;
-
-	public void addAdjacent(Node n, int dist) {
-		adjacentNodes.put(n, dist);
-	}
-
-	public Node(int row, int column) {
-		this.row = row;
-		this.column = column;
-	}
-
-	public int getRow() { return row; }
-	public int getColumn() { return column; }
-
-	public int getDistance() { return distance; }
-	public void setDistance(int dist) { distance = dist; }
-
-	public List<Node> getShortestPath() { return shortestPath; }
-	public void setShortestPath(List<Node> shortestPath) { this.shortestPath = shortestPath; }
-
-	public Map<Node, Integer> getAdjacent(int[][] grid) {
-		if (adjacentNodes == null) {
-			adjacentNodes = new HashMap<>();
-			/*
-			if (row > 0) {
-				Node n = new Node(row - 1, column);
-				adjacentNodes.put(n, grid[row - 1][column]);	
-			}
-			*/
-			if (row < grid.length - 1) {
-				Node n = new Node(row + 1, column);
-				adjacentNodes.put(n, grid[row + 1][column]);
-			}
-			/*
-			if (column > 0) {
-				Node n = new Node(row, column - 1);
-				adjacentNodes.put(n, grid[row][column - 1]);
-			}
-			*/
-			if (column < grid[row].length - 1) {
-				Node n = new Node(row, column + 1);
-				adjacentNodes.put(n, grid[row][column + 1]);
-			}
-		}
-		return adjacentNodes;
+		*/
+		return graph[0][0];
 	}
 }

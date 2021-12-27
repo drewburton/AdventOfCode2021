@@ -44,6 +44,7 @@ public class Main {
 			System.out.println("unable to open file");
 		}
 	}
+}
 
 class Target {
 	private int x1;
